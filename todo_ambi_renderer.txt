@@ -1,0 +1,5 @@
+- xml dateien
+
+- code testen
+
+- Verbesserte Bedienung (Skript oder GUI o.Ä ...)
