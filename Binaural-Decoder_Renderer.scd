@@ -2,11 +2,11 @@
 //                                                                              //
 // ----------------------- AMBISONICS BINAURAL RENDERER ----------------------- //
 //                                                                              //
-// B-Format --> Binaural                                                        //
+//                            B-Format --> Binaural                             //
 //                                                                              //
-// Michele Samarotto & Daniel Höpfner - 2020 - @ IMWI HfM-Karlsruhe             //
+//      Michele Samarotto & Daniel Höpfner - 2020 - @ IMWI HfM-Karlsruhe        //
 //                                                                              //
-// For usage information see README                                             //
+//                       For usage information see README                       //
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
