@@ -10,112 +10,166 @@
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
+// channel number (uebereinstimmung in xml)
 (
-var
-document, speakerPosXMLFile, xmlString, speakerList,
-soundFile, soundFileDuration, currentDirectory, currentDirectoryPath,
-score,
-buffers, synth,
-encoderMatrix, decoderMatrix;
+Task({
+	// args: input-path xml-path amp-scale=1/chan_num out-path=./B-Format_YYYYMMDD_HHMMSS.wav
+	var args = thisProcess.argv;
+	
+	if ((args.size >= 2) && (args.size < 5))
+	{
+		var
+		filePath, currentDirectory, currentDirectoryPath,
+		extensions, inputFiles;
+		
+		document, speakerPosXMLFile, xmlString, speakerList,
+		soundFile, soundFileDuration,
+		score,
+		buffers, synth,
+		encoderMatrix, decoderMatrix;
 
-currentDirectory = thisProcess.nowExecutingPath.dirname;
-currentDirectoryPath = PathName(currentDirectory);
+		currentDirectory = thisProcess.nowExecutingPath.dirname;
+		currentDirectoryPath = PathName(currentDirectory);
 
-// create render folder
-if ((currentDirectory +/+ "render").pathMatch[0].isNil) { ("mkdir " ++ currentDirectory +/+ "render").unixCmd };
+		filePath = args[0];
 
-// get sound file duration
-soundFile = SoundFile.openRead((currentDirectory +/+ "*.wav").pathMatch[0]);
-soundFileDuration = soundFile.duration;
-soundFile.close;
+		if (PathName(filePath).isFolder) {
 
-// >------------------------------------------------------------------------------
-// load xml-file, read speaker positions and transform into spherical coordinates
+			extensions = ["wav", "aiff"];
 
-document = DOMDocument.new;
-speakerPosXMLFile = File((currentDirectory +/+ "*.xml").pathMatch[0], "rb+");
-xmlString = String.readNew(speakerPosXMLFile);
-document.parseXML(xmlString);
+			inputFiles = [];
+
+			extensions.do{
+				arg extension;
+
+				inputFiles = inputFiles ++ (filePath +/+ "*." ++ extension).pathMatch;
+			};
+
+			// files.postln;
+
+			if (inputFiles.size > 0) {
+				// //////////////////////////////
+				// continue doing stuff here
+				
+			}
+			{// if input files are not aiff or wav:
+				("There are no 'aiff' or 'wav' files in" + filePath ++ "!").postln;
+				0.exit;
+			};
+		}
+		{ // if filePath is not a folder
+			(filePath + "is not a valid path to a folder!").postln;
+			0.exit;
+			// nil.yield;
+		}
+
+		switch (args.size,
+			2, {},
+			3, {},
+		);
+
+		// create render folder
+		if ((currentDirectory +/+ "render").pathMatch[0].isNil) { ("mkdir " ++ currentDirectory +/+ "render").unixCmd };
+
+		// get sound file duration
+		soundFile = SoundFile.openRead((currentDirectory +/+ "*.wav").pathMatch[0]);
+		soundFileDuration = soundFile.duration;
+		soundFile.close;
+
+		// >------------------------------------------------------------------------------
+		// load xml-file, read speaker positions and transform into spherical coordinates
+
+		document = DOMDocument.new;
+		speakerPosXMLFile = File((currentDirectory +/+ "*.xml").pathMatch[0], "rb+");
+		xmlString = String.readNew(speakerPosXMLFile);
+		document.parseXML(xmlString);
 
 
-speakerList = List.newClear(document.getDocumentElement.getElementsByTagName("Speaker").size);
+		speakerList = List.newClear(document.getDocumentElement.getElementsByTagName("Speaker").size);
 
-document.getDocumentElement.getElementsByTagName("Speaker").do{
-	|tag, index|
-	var x, y, z, azi, ele, dist;
+		document.getDocumentElement.getElementsByTagName("Speaker").do{
+			|tag, index|
+			var x, y, z, azi, ele, dist;
 
-	x = tag.getAttribute("x").asFloat;
-	y = tag.getAttribute("y").asFloat;
-	z = tag.getAttribute("z").asFloat;
+			x = tag.getAttribute("x").asFloat;
+			y = tag.getAttribute("y").asFloat;
+			z = tag.getAttribute("z").asFloat;
 
-	dist = sqrt((x * x) + (y * y) + (z * z));
+			dist = sqrt((x * x) + (y * y) + (z * z));
 
-	ele = acos(z / dist).raddeg;
+			ele = acos(z / dist).raddeg;
 
-	azi = atan2(y, x).raddeg; // mathematically correct (azi = 0 right)
+			azi = atan2(y, x).raddeg; // mathematically correct (azi = 0 right)
 
-	// rotate for spat-standart (azi = 0 front)
-	azi = azi - 90.0;
-	if (azi < -180) { azi = azi % 180 };
+			// rotate for spat-standart (azi = 0 front)
+			azi = azi - 90.0;
+			if (azi < -180) { azi = azi % 180 };
 
-	speakerList[tag.getAttribute("lsNo").asInteger - 1] = [azi, ele]; // [  [ speaker-number, azimuth, elevation ], ...  ]
-};
-// ------------------------------------------------------------------------------<
+			speakerList[tag.getAttribute("lsNo").asInteger - 1] = [azi, ele]; // [  [ speaker-number, azimuth, elevation ], ...  ]
+		};
+		// ------------------------------------------------------------------------------<
 
-// >------------------------------------------------------------------------------
-// define render-synths and en-/decoder matrices
+		// >------------------------------------------------------------------------------
+		// define render-synths and en-/decoder matrices
 
-SynthDef(\playback, {
-	|buffer, out = 0|
-	var snd;
-	snd = PlayBuf.ar(1, buffer, BufRateScale.ir(buffer), doneAction: 2);
-	OffsetOut.ar(out, snd);
-}).load(s);
+		SynthDef(\playback, {
+			|buffer, out = 0|
+			var snd;
+			snd = PlayBuf.ar(1, buffer, BufRateScale.ir(buffer), doneAction: 2);
+			OffsetOut.ar(out, snd);
+		}).load(s);
 
-encoderMatrix = FoaEncoderMatrix.newDirections(speakerList.degrad); // discrete channels --> b-format
-decoderMatrix = FoaDecoderMatrix.newHoa1(normalisation: 'sn3d'); // b-format --> b-format (acn, sn3d)
+		encoderMatrix = FoaEncoderMatrix.newDirections(speakerList.degrad); // discrete channels --> b-format
+		decoderMatrix = FoaDecoderMatrix.newHoa1(normalisation: 'sn3d'); // b-format --> b-format (acn, sn3d)
 
-SynthDef(\encode, {
-	var input, snd;
-	input = In.ar((0..(speakerList.size - 1)) + 100);
-	snd = FoaEncode.ar(input, encoderMatrix);
-	snd = FoaDecode.ar(snd, decoderMatrix);
-	OffsetOut.ar(0, snd);
-}).load(s);
-// ------------------------------------------------------------------------------<
+		SynthDef(\encode, {
+			var input, snd;
+			input = In.ar((0..(speakerList.size - 1)) + 100);
+			snd = FoaEncode.ar(input, encoderMatrix);
+			snd = FoaDecode.ar(snd, decoderMatrix);
+			OffsetOut.ar(0, snd);
+		}).load(s);
+		// ------------------------------------------------------------------------------<
 
-// >------------------------------------------------------------------------------
-// score construction and NRT (non realtime) rendering
+		// >------------------------------------------------------------------------------
+		// score construction and NRT (non realtime) rendering
 
-score = Score.new;
-buffers = List.newClear;
+		score = Score.new;
+		buffers = List.newClear;
 
-// load buffers and play discrete channel audio
-(currentDirectory +/+ "*.wav").pathMatch.do{ |path, index|
+		// load buffers and play discrete channel audio
+		(currentDirectory +/+ "*.wav").pathMatch.do{ |path, index|
 
-	// load buffers
-	buffers.add(Buffer.new);
-	score.add([0, buffers[index].allocReadMsg(path);]);
+			// load buffers
+			buffers.add(Buffer.new);
+			score.add([0, buffers[index].allocReadMsg(path);]);
 
-	// synths for discrete channel audio playback
-	synth = Synth.basicNew(\playback);
-	score.add([0.1, synth.newMsg(s, [buffer: buffers[index], out: index + 100])]);
+			// synths for discrete channel audio playback
+			synth = Synth.basicNew(\playback);
+			score.add([0.1, synth.newMsg(s, [buffer: buffers[index], out: index + 100])]);
 
-};
+		};
 
-// synth for encoding all discrete channels
-synth = Synth.basicNew(\encode);
-score.add([0.1, synth.newMsg(s, addAction: 'addToTail')]);
+		// synth for encoding all discrete channels
+		synth = Synth.basicNew(\encode);
+		score.add([0.1, synth.newMsg(s, addAction: 'addToTail')]);
 
-// end of score
-score.add([soundFileDuration, 0]);
-score.sort;
+		// end of score
+		score.add([soundFileDuration, 0]);
+		score.sort;
 
-// render score
-score.recordNRT(
-	"/tmp/osc_nrt_" ++ Date.getDate.format("%Y%m%d_%H%M%S"),
-	currentDirectory +/+ "render" +/+ "B-Format_" ++ Date.getDate.format("%Y%m%d_%H%M") ++ ".wav",
-	options: ServerOptions.new.numOutputBusChannels_(4)
-);
-// ------------------------------------------------------------------------------<
+		// render score
+		score.recordNRT(
+			"/tmp/osc_nrt_" ++ Date.getDate.format("%Y%m%d_%H%M%S"),
+			currentDirectory +/+ "render" +/+ "B-Format_" ++ Date.getDate.format("%Y%m%d_%H%M") ++ ".wav",
+			options: ServerOptions.new.numOutputBusChannels_(4)
+		);
+		// ------------------------------------------------------------------------------<
+	}
+	{ // if more than one arguments
+		"Wrong number of arguments!".postln;
+		0.exit;
+		// nil.yield;
+	};
+})
 )

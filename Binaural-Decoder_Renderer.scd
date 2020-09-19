@@ -30,6 +30,7 @@ Task({
 		currentDirectory = thisProcess.nowExecutingPath.dirname;
 		currentDirectoryPath = PathName(currentDirectory);
 
+		// number of arguments
 		switch (args.size,
 			1, { whichDecoderMatrix = "0"; outputPath = currentDirectory +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
 			2, { whichDecoderMatrix = args[1]; outputPath = currentDirectory +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
