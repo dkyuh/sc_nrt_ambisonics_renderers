@@ -108,25 +108,25 @@ Task({
 				{
 					(outputPath.fullPath + "is not a valid path!").postln;
 					0.exit;
-					nil.yield;
+					// nil.yield;
 				}
 			}
 			{ // if not 4 channels
 				(filePath + "does not have 4 channels!").postln;
 				0.exit;
-				nil.yield;
+				// nil.yield;
 			}
 		}
 		{ // if filePath is not a file
 			(filePath + "is not a file!").postln;
 			0.exit;
-			nil.yield;
+			// nil.yield;
 		}
 	}
 	{ // if more than one arguments
 		"Wrong number of arguments!".postln;
 		0.exit;
-		nil.yield;
+		// nil.yield;
 	};
 	// ------------------------------------------------------------------------------<
 }).start;
