@@ -18,7 +18,7 @@ Task({
 	if ((args.size >= 1) && (args.size < 4))
 	{
 		var
-		filePath, currentDirectory, currentDirectoryPath,
+		filePath,
 		soundFile, soundFileDuration,
 		sampleRate, numChannels,
 		whichDecoderMatrix, decoderMatrix,
@@ -27,95 +27,101 @@ Task({
 
 		filePath = args[0];
 
-		currentDirectory = thisProcess.nowExecutingPath.dirname;
-		currentDirectoryPath = PathName(currentDirectory);
-
 		// number of arguments
 		switch (args.size,
-			1, { whichDecoderMatrix = "0"; outputPath = currentDirectory +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
-			2, { whichDecoderMatrix = args[1]; outputPath = currentDirectory +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
+			1, { whichDecoderMatrix = "0"; outputPath = File.getcwd +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
+			2, { whichDecoderMatrix = args[1]; outputPath = File.getcwd +/+ "Binaural_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav"; },
 			3, { whichDecoderMatrix = args[1]; outputPath = args[2]; }
 		);
 
 		// get sound file duration
 		if (PathName(filePath).isFile) {
+			if ((PathName(filePath).extension == "wav") || (PathName(filePath).extension == "aiff")) {
+				try {
+					soundFile = SoundFile.openRead(filePath);
+					soundFile.close;
+				}
+				{ // catch
+					arg error;
+					if (error.species.name == 'DoesNotUnderstandError') {
+						(filePath + "seems to be not readable!").postln;
+						// error.throw;
+						soundFile.close;
+						0.exit;
+						nil.yield;
+					}
+				};
 
-			try {
-				soundFile = SoundFile.openRead(filePath);
-				soundFileDuration = soundFile.duration.postln;
+				soundFileDuration = soundFile.duration;
 				sampleRate = soundFile.sampleRate;
 				numChannels = soundFile.numChannels;
-				soundFile.close;
-			}
-			{ // catch
-				arg error;
-				if (error.species.name == 'DoesNotUnderstandError') {
-					(filePath + "is not an audio file!").postln;
-					// error.throw;
-					0.exit;
-					nil.yield;
-				}
-			};
 
-			if (numChannels == 4) {
-				// >------------------------------------------------------------------------------
-				// define decoder matrix and render-synth
+				if (numChannels == 4) {
 
-				score = Score.new;
+					// >------------------------------------------------------------------------------
+					// define decoder matrix and render-synth
 
-				switch(whichDecoderMatrix,
-					"0", { decoderMatrix = FoaDecoderKernel.newCIPIC(sampleRate: sampleRate, score: score); },
-					"1", { decoderMatrix = FoaDecoderKernel.newSpherical(sampleRate: sampleRate, score: score); },
-					"2", { decoderMatrix = FoaDecoderKernel.newSpherical(sampleRate: sampleRate, score: score); },
-					{ (whichDecoderMatrix + "is not a valid decoder option").postln; 0.exit; nil.yield; }
-				);
+					score = Score.new;
 
-				// synth for binaural decoding
-				SynthDef(\decode, { |buffer, out = 0|
-					var input, snd;
-					snd = PlayBuf.ar(4, buffer, BufRateScale.ir(buffer), doneAction: 2);
-					snd = FoaDecode.ar(snd, decoderMatrix);
-					OffsetOut.ar(0, snd);
-				}).load(s);
-				// ------------------------------------------------------------------------------<
-
-				// >------------------------------------------------------------------------------
-				// score construction and NRT (non realtime) rendering
-
-				// add buffer to score
-				buffer = Buffer.new(numChannels: 4);
-				score.add([0, buffer.allocReadMsg(filePath);]);
-
-				// add synth to score
-				synth = Synth.basicNew(\decode);
-				score.add([0.1, synth.newMsg(s, [buffer: buffer])]);
-
-				// end of score
-				score.add([soundFileDuration, 0]);
-				score.sort;
-
-				outputPath = PathName(outputPath);
-				if (outputPath.pathOnly.isFolder &&
-					((outputPath.extension == "wav") || (outputPath.extension == "aiff")))
-				{
-					// render score
-					score.recordNRT(
-						Platform.defaultTempDir ++ Date.getDate.format("%Y%m%d_%H%M%S"),
-						outputPath.fullPath,
-						options: ServerOptions.new.numOutputBusChannels_(2),
-						action: { 0.exit; }
+					switch(whichDecoderMatrix,
+						"0", { decoderMatrix = FoaDecoderKernel.newCIPIC(sampleRate: sampleRate, score: score); },
+						"1", { decoderMatrix = FoaDecoderKernel.newSpherical(sampleRate: sampleRate, score: score); },
+						"2", { decoderMatrix = FoaDecoderKernel.newSpherical(sampleRate: sampleRate, score: score); },
+						{ (whichDecoderMatrix + "is not a valid decoder option").postln; 0.exit; nil.yield; }
 					);
+
+					outputPath = PathName(outputPath);
+					if (outputPath.pathOnly.isFolder &&
+						((outputPath.extension == "wav") || (outputPath.extension == "aiff")))
+					{
+
+						// synth for binaural decoding
+						SynthDef(\decode, { |buffer, out = 0|
+							var input, snd;
+							snd = PlayBuf.ar(4, buffer, BufRateScale.ir(buffer), doneAction: 2);
+							snd = FoaDecode.ar(snd, decoderMatrix);
+							OffsetOut.ar(0, snd);
+						}).load(s);
+						// ------------------------------------------------------------------------------<
+
+						// >------------------------------------------------------------------------------
+						// score construction and NRT (non realtime) rendering
+
+						// add buffer to score
+						buffer = Buffer.new(numChannels: 4);
+						score.add([0, buffer.allocReadMsg(filePath);]);
+
+						// add synth to score
+						synth = Synth.basicNew(\decode);
+						score.add([0.1, synth.newMsg(s, [buffer: buffer])]);
+
+						// end of score
+						score.add([soundFileDuration, 0]);
+						score.sort;
+
+						// render score
+						score.recordNRT(
+							Platform.defaultTempDir ++ Date.getDate.format("%Y%m%d_%H%M%S"),
+							outputPath.fullPath,
+							options: ServerOptions.new.numOutputBusChannels_(2),
+							action: { 0.exit; }
+						);
+					}
+					{
+						(outputPath.fullPath + "is not a valid output-audio-file-path!").postln;
+						0.exit;
+						// nil.yield;
+					}
 				}
-				{
-					(outputPath.fullPath + "is not a valid path!").postln;
+				{ // if not 4 channels
+					(filePath + "does not have 4 channels!").postln;
 					0.exit;
 					// nil.yield;
 				}
 			}
-			{ // if not 4 channels
-				(filePath + "does not have 4 channels!").postln;
+			{
+				(filePath + "is not an audio file!").postln;
 				0.exit;
-				// nil.yield;
 			}
 		}
 		{ // if filePath is not a file
