@@ -1,5 +1,3 @@
-- xml dateien
-
-- code testen
-
-- Verbesserte Bedienung (Skript oder GUI o.Ä ...)
+- B-Format_Renderer.scd -> testing
+- B-Format_Renderer.scd & Binaural-Decoder_Renderer.scd -> clean-up
+- README.md
