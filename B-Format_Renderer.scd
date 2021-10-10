@@ -112,13 +112,16 @@ Task({
 
 								dist = sqrt((x * x) + (y * y) + (z * z));
 
-								ele = acos(z / dist).raddeg;
+								// ele = acos(z / dist).raddeg;
+								ele = asin(z / dist).raddeg;
 
 								azi = atan2(y, x).raddeg; // mathematically correct (azi = 0 right)
 
 								// rotate for spat-standart (azi = 0 front)
 								azi = azi - 90.0;
 								if (azi < -180) { azi = azi % 180 };
+
+								// ([azi, ele]).postln;
 
 								speakerList[tag.getAttribute("lsNo").asInteger] = [azi, ele]; // [  [ speaker-number, azimuth, elevation ], ...  ]
 							};
@@ -163,7 +166,7 @@ Task({
 										var input, snd;
 										input = In.ar((0..(speakerList.size - 1)) + 100);
 										snd = FoaEncode.ar(input, encoderMatrix);
-										snd = FoaDecode.ar(snd, decoderMatrix);
+										// snd = FoaDecode.ar(snd, decoderMatrix);
 										OffsetOut.ar(0, snd);
 									}).load(s);
 									// ------------------------------------------------------------------------------<
