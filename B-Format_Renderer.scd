@@ -133,11 +133,11 @@ Task({
 									outputPath = File.getcwd +/+ "B-format_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav";
 								},
 								3, {
-									ampScale = args[2];
+									ampScale = args[2].asFloat;
 									outputPath = File.getcwd +/+ "B-format_" ++ Date.getDate.format("%Y%m%d_%H%M%S") ++ ".wav";
 								},
 								4, {
-									ampScale = args[2];
+									ampScale = args[2].asFloat;
 									outputPath = args[3];
 								}
 							);
