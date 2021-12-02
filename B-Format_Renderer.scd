@@ -160,7 +160,7 @@ Task({
 									}).load(s);
 
 									encoderMatrix = FoaEncoderMatrix.newDirections(speakerList.degrad); // discrete channels --> b-format
-									decoderMatrix = FoaDecoderMatrix.newHoa1(normalisation: 'sn3d'); // b-format --> b-format (acn, sn3d)
+									// decoderMatrix = FoaDecoderMatrix.newHoa1(normalisation: 'sn3d'); // b-format --> b-format (acn, sn3d)
 
 									SynthDef(\encode, {
 										var input, snd;
