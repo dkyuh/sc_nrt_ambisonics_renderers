@@ -4,9 +4,7 @@
 //                                                                              //
 //                            B-Format --> Binaural                             //
 //                                                                              //
-//      Michele Samarotto & Daniel Höpfner - 2020 - @ IMWI HfM-Karlsruhe        //
-//                                                                              //
-//                       For usage information see README                       //
+//      Michele Samarotto & Daniel Höpfner - 2021 - @ IMWI HfM-Karlsruhe        //
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -110,13 +108,11 @@ Task({
 					{
 						(outputPath.fullPath + "is not a valid output-audio-file-path!").postln;
 						0.exit;
-						// nil.yield;
 					}
 				}
 				{ // if not 4 channels
 					(filePath + "does not have 4 channels!").postln;
 					0.exit;
-					// nil.yield;
 				}
 			}
 			{
@@ -127,66 +123,12 @@ Task({
 		{ // if filePath is not a file
 			(filePath + "is not a file!").postln;
 			0.exit;
-			// nil.yield;
 		}
 	}
 	{ // if more than one arguments
 		"Wrong number of arguments!".postln;
 		0.exit;
-		// nil.yield;
 	};
 	// ------------------------------------------------------------------------------<
 }).start;
 )
-
-
-
-// Tests:
-//
-// sclang Binaural-Decoder_Renderer.scd
-// --> Wrong number of arguments!
-//
-// sclang Binaural-Decoder_Renderer.scd 1 2 3 4
-// --> Wrong number of arguments!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/tralala
-// --> /Users/danielhopfner/Downloads/atk-sounds/tralala is not a file!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/LICENSE.md
-// --> /Users/danielhopfner/Downloads/atk-sounds/LICENSE.md is not an audio file!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/stereo/Aurora_Surgit-Dies_Irae.wav
-// --> /Users/danielhopfner/Downloads/atk-sounds/stereo/Aurora_Surgit-Dies_Irae.wav does not have 4 channels!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav
-// --> läuft
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 0
-// --> läuft
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 1
-// --> läuft
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2
-// --> läuft
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 200
-// --> 200 is not a valid decoder option
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Dow
-// --> /Users/danielhopfner/Dow is not a valid path!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Dow/test.wav
-// --> /Users/danielhopfner/Dow/test.wav is not a valid path!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Downloads/
-// --> /Users/danielhopfner/Downloads/ is not a valid path!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Downloads/test.tralala
-// --> /Users/danielhopfner/Downloads/test.tralala is not a valid path!
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Downloads/test.wav
-// --> läuft
-//
-// sclang Binaural-Decoder_Renderer.scd ~/Downloads/atk-sounds/b-format/Leonard-Orfeo_Trio.wav 2 ~/Downloads/test.aiff
-// --> läuft

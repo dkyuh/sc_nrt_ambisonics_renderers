@@ -2,11 +2,9 @@
 //                                                                              //
 // ----------------------- AMBISONICS B-FORMAT RENDERER ----------------------- //
 //                                                                              //
-// Discrete Channels --> B-Format                                               //
+//                        Discrete Channels --> B-Format                        //
 //                                                                              //
-// Michele Samarotto & Daniel Höpfner - May 2018 - @ IMWI HfM-Karlsruhe         //
-//                                                                              //
-// for usage information see README                                             //
+//       Michele Samarotto & Daniel Höpfner - 2021 - @ IMWI HfM-Karlsruhe       //
 //                                                                              //
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -247,7 +245,6 @@ Task({
 	{ // if more than one arguments
 		"Wrong number of arguments!".postln;
 		0.exit;
-		// nil.yield;
 	};
 }).start;
 )
